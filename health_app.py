@@ -8,7 +8,6 @@ def calculate_bmi(weight_kg, height_cm):
 
 
 def calculate_bmr(weight, height, age, gender):
-    # Mifflin-St Jeor Equation
     if gender == "Male":
         return (10 * weight) + (6.25 * height) - (5 * age) + 5
     else:
@@ -40,9 +39,21 @@ def estimate_body_age(chronological_age, bmi, activity_level):
     return max(15, round(body_age))
 
 
+def calculate_ibw(height_cm, gender):
+    # Devine Formula: Calculates ideal weight based on height and biological sex.
+    inches_over_5_feet = (height_cm - 152.4) / 2.54
+
+    if inches_over_5_feet < 0:
+        inches_over_5_feet = 0
+
+    if gender == "Male":
+        return 50.0 + (2.3 * inches_over_5_feet)
+    else:
+        return 45.5 + (2.3 * inches_over_5_feet)
+
+
 # --- 2. HEALTH ASSESSMENT LOGIC ---
 def evaluate_health(bmi, tdee, real_age, body_age):
-    # Evaluate BMI & Diet Management
     if bmi < 18.5:
         status = "Underweight (Low Health Score)"
         color = "warning"
@@ -60,7 +71,6 @@ def evaluate_health(bmi, tdee, real_age, body_age):
         color = "error"
         advice = f"Action: Focus on a structured caloric deficit of ~{int(tdee - 500)} to {int(tdee - 750)} kcal/day. Prioritize whole foods and consult a physician."
 
-    # Evaluate Age Metrics
     if body_age > real_age:
         age_warning = "Your estimated biological age is higher than your real age. Improving activity levels will lower this."
     else:
@@ -73,7 +83,8 @@ def evaluate_health(bmi, tdee, real_age, body_age):
 st.set_page_config(page_title="Health Informatics App", layout="wide")
 
 st.title("🏃‍♂️ Personal Health & Fitness Informatics")
-st.markdown("A professional dashboard calculating essential physiological metrics and health status.")
+st.markdown(
+    "A professional dashboard calculating essential physiological metrics, health status, and predictive timelines.")
 
 # Input Layout
 st.subheader("1. Enter Parameters")
@@ -92,7 +103,6 @@ activity = col_in5.selectbox("Activity Level", [
 
 # Create a Calculate Button
 if st.button("Calculate", type="primary"):
-    # Prevent calculation if height or weight is 0 to avoid DivisionByZero errors
     if height == 0 or weight == 0 or age == 0:
         st.warning("⚠️ Please enter valid values (greater than 0) for Age, Weight, and Height.")
     else:
@@ -101,30 +111,64 @@ if st.button("Calculate", type="primary"):
         bmr = calculate_bmr(weight, height, age, gender)
         tdee = calculate_tdee(bmr, activity)
         body_age = estimate_body_age(age, bmi, activity)
+        ibw = calculate_ibw(height, gender)
+        weight_variance = weight - ibw
+
         status, advice, color, age_warning = evaluate_health(bmi, tdee, age, body_age)
+
+        # NEW: Predictive Analytics Math (Time to Goal formatted in Months/Weeks/Days)
+        # 1 kg of body mass is roughly 7,700 kcal.
+        total_kcal_needed = abs(weight_variance) * 7700
+        total_days = int(total_kcal_needed / 500)  # Dividing by our 500 daily calorie offset
+
+        # The Math: Breaking total days into M/W/D
+        months = total_days // 30
+        leftover_days = total_days % 30
+        weeks = leftover_days // 7
+        days = leftover_days % 7
+
+        time_string = f"{months} Months, {weeks} Weeks, and {days} Days"
 
         # --- 5. DISPLAY METRICS ---
         st.divider()
         st.subheader("2. Calculated Data Output")
 
-        col_out1, col_out2, col_out3, col_out4 = st.columns(4)
+        col_out1, col_out2, col_out3, col_out4, col_out5 = st.columns(5)
+
         col_out1.metric("Body Mass Index (BMI)", f"{bmi:.1f}")
-        col_out2.metric("Basal Metabolic Rate (BMR)", f"{int(bmr)} kcal/day")
-        col_out3.metric("Total Daily Energy (TDEE)", f"{int(tdee)} kcal/day")
-        col_out4.metric("Estimated Biological Body Age", f"{body_age} Years")
+        col_out2.metric("Total Daily Energy (TDEE)", f"{int(tdee)} kcal")
+        col_out3.metric("Ideal Body Weight (IBW)", f"{ibw:.1f} kg")
+
+        if abs(weight_variance) < 1.0:
+            col_out4.metric("Ideal Weight Delta", "Perfect Match!", delta="0.0 kg", delta_color="normal")
+        else:
+            col_out4.metric("Ideal Weight Delta", f"{weight_variance:+.1f} kg", delta="Target Deviation",
+                            delta_color="inverse")
+
+        col_out5.metric("Est. Biological Age", f"{body_age} Yrs")
 
         # --- 6. HEALTH ASSESSMENT REPORT ---
         st.divider()
         st.subheader("3. Health Status & Management Plan")
 
-        # Streamlit colored alert boxes based on the evaluation
-        if color == "success":
-            st.success(f"**Overall Status:** {status}")
-        elif color == "warning":
-            st.warning(f"**Overall Status:** {status}")
+        # First, we determine the timeline text based on the variance
+        if abs(weight_variance) < 1.0:
+            timeline_text = "You are currently at your ideal weight. Maintain your current daily calorie intake to stay here!"
         else:
-            st.error(f"**Overall Status:** {status}")
+            timeline_text = f"If you strictly follow the diet management plan (a 500 kcal/day offset), you will safely reach your Ideal Body Weight in approximately **{time_string}**."
 
-        # Display actionable advice
-        st.info(f"**Diet Management:** {advice}")
-        st.info(f"**Metabolic Age Note:** {age_warning}")
+        # Next, we build the bullet point list using a multi-line formatted string
+        bulleted_report = f"""
+                * **Overall Status:** {status}
+                * **Diet Management:** {advice}
+                * **🗓️ Goal Timeline:** {timeline_text}
+                * **Metabolic Age Note:** {age_warning}
+                """
+
+        # Finally, we display the entire bulleted list inside the dynamically colored box!
+        if color == "success":
+            st.success(bulleted_report)
+        elif color == "warning":
+            st.warning(bulleted_report)
+        else:
+            st.error(bulleted_report)
