@@ -80,9 +80,9 @@ st.subheader("1. Enter Parameters")
 col_in1, col_in2, col_in3, col_in4, col_in5 = st.columns(5)
 
 gender = col_in1.selectbox("Biological Sex", ["Male", "Female"])
-age = col_in2.number_input("Age (Years)", min_value=15, max_value=100, value=20)
-weight = col_in3.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
-height = col_in4.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=175.0)
+age = col_in2.number_input("Age (Years)", min_value=0, max_value=100, value=0)
+weight = col_in3.number_input("Weight (kg)", min_value=0.0, max_value=200.0, value=0.0)
+height = col_in4.number_input("Height (cm)", min_value=0.0, max_value=250.0, value=0.0)
 activity = col_in5.selectbox("Activity Level", [
     "Sedentary (office job)",
     "Light Exercise (1-2 days/week)",
@@ -90,35 +90,41 @@ activity = col_in5.selectbox("Activity Level", [
     "Heavy Exercise (6-7 days/week)"
 ])
 
-# --- 4. EXECUTE MATHS ---
-bmi = calculate_bmi(weight, height)
-bmr = calculate_bmr(weight, height, age, gender)
-tdee = calculate_tdee(bmr, activity)
-body_age = estimate_body_age(age, bmi, activity)
-status, advice, color, age_warning = evaluate_health(bmi, tdee, age, body_age)
+# Create a Calculate Button
+if st.button("Calculate", type="primary"):
+    # Prevent calculation if height or weight is 0 to avoid DivisionByZero errors
+    if height == 0 or weight == 0 or age == 0:
+        st.warning("⚠️ Please enter valid values (greater than 0) for Age, Weight, and Height.")
+    else:
+        # --- 4. EXECUTE MATHS ---
+        bmi = calculate_bmi(weight, height)
+        bmr = calculate_bmr(weight, height, age, gender)
+        tdee = calculate_tdee(bmr, activity)
+        body_age = estimate_body_age(age, bmi, activity)
+        status, advice, color, age_warning = evaluate_health(bmi, tdee, age, body_age)
 
-# --- 5. DISPLAY METRICS ---
-st.divider()
-st.subheader("2. Calculated Data Output")
+        # --- 5. DISPLAY METRICS ---
+        st.divider()
+        st.subheader("2. Calculated Data Output")
 
-col_out1, col_out2, col_out3, col_out4 = st.columns(4)
-col_out1.metric("Body Mass Index (BMI)", f"{bmi:.1f}")
-col_out2.metric("Basal Metabolic Rate (BMR)", f"{int(bmr)} kcal/day")
-col_out3.metric("Total Daily Energy (TDEE)", f"{int(tdee)} kcal/day")
-col_out4.metric("Estimated Biological Body Age", f"{body_age} Years")
+        col_out1, col_out2, col_out3, col_out4 = st.columns(4)
+        col_out1.metric("Body Mass Index (BMI)", f"{bmi:.1f}")
+        col_out2.metric("Basal Metabolic Rate (BMR)", f"{int(bmr)} kcal/day")
+        col_out3.metric("Total Daily Energy (TDEE)", f"{int(tdee)} kcal/day")
+        col_out4.metric("Estimated Biological Body Age", f"{body_age} Years")
 
-# --- 6. HEALTH ASSESSMENT REPORT ---
-st.divider()
-st.subheader("3. Health Status & Management Plan")
+        # --- 6. HEALTH ASSESSMENT REPORT ---
+        st.divider()
+        st.subheader("3. Health Status & Management Plan")
 
-# Streamlit colored alert boxes based on the evaluation
-if color == "success":
-    st.success(f"**Overall Status:** {status}")
-elif color == "warning":
-    st.warning(f"**Overall Status:** {status}")
-else:
-    st.error(f"**Overall Status:** {status}")
+        # Streamlit colored alert boxes based on the evaluation
+        if color == "success":
+            st.success(f"**Overall Status:** {status}")
+        elif color == "warning":
+            st.warning(f"**Overall Status:** {status}")
+        else:
+            st.error(f"**Overall Status:** {status}")
 
-# Display actionable advice
-st.info(f"**Diet Management:** {advice}")
-st.info(f"**Metabolic Age Note:** {age_warning}")
+        # Display actionable advice
+        st.info(f"**Diet Management:** {advice}")
+        st.info(f"**Metabolic Age Note:** {age_warning}")
