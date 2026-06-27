@@ -1,17 +1,17 @@
 # HEALTH APP
-# The Core Purpose (What it is)
-It is an interactive Health Informatics Dashboard.
-It acts as a digital health assistant that turns basic physical data into a personalized fitness and diet plan.
+# Algorithmic Analysis:
+Implemented standard medical formulas (Mifflin-St Jeor, Devine) to accurately calculate BMI, BMR, TDEE, and Ideal Body Weight (IBW).
 
-# How It Works (The Process)
-**Data Intake:** It collects basic user information (Sex, Age, Weight, Height, Activity Level) via a clean web interface.
+**-BMI**: Body mass index is a value derived from the mass and height of a person.
 
-**Scientific Calculation**: It processes this data using industry-standard medical formulas (like the Mifflin-St Jeor Equation) to calculate key metrics:\
--BMI: To check if the weight is within a healthy range.\
--BMR: To find out how many calories the body burns at rest.\
--TDEE: To calculate total daily calorie burn including exercise.\
--Body Age: To estimate physiological age versus chronological age.
+**-BMR (Basal Metabolic Rate):** It is the total number of calories your body needs to perform basic, life-sustaining functions (like breathing, cell production, and pumping blood) at complete rest.
 
-**Medical Evaluation:** The code's "decision engine" evaluates the BMI and determines a health status (e.g., Optimal, Warning, High Risk).
+**-TDEE (Total Daily Energy Expenditure):** It is the total number of calories your body burns in a single day, including basic bodily functions, digestion, and physical activities
 
-**Custom Action Plan:** It automatically generates dietary advice, suggesting exactly how many calories to eat to safely lose weight or build mass.
+**-Body Age(or biological age):** It is a measure of how well your body is functioning compared to the average condition for your chronological (calendar) age.
+
+# Predictive Analytics:
+Built a forecasting engine that calculates exact caloric variances to project a personalized target-weight timeline (Months/Weeks/Days).
+
+# Robust UI & Error Handling:
+Designed a dynamically rendering interface with strict input validation to prevent edge-case crashes (e.g., divide-by-zero errors).
